@@ -48,9 +48,15 @@ describe('Crowdsale', () => {
 	});
 
 	describe('Buying Tokens', () => {
+		let amount = tokens(10);
+
 		describe('Success', () => {
 			it('transfers tokens', async () => {
+				let transaction = await crowdsale.connect(user1).buyTokens(amount);
+				let result = await transaction.wait();
 
+				expect(await token.balanceOf(crowdsale.address)).to.equal(tokens(999990));
+				expect(await token.balanceOf(user1.address)).to.equal(amount);
 			});
 		});
 
