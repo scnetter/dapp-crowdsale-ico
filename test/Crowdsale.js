@@ -24,7 +24,8 @@ describe('Crowdsale', () => {
 		// Could this be used to interact with an existing token just using the
 		// a valid token address on the chain?
 		// Associate Deployed token with Crowdsale
-		crowdsale = await Crowdsale.deploy(token.address, ether(1));
+		// Why not tokens(100000) in demo was '1000000'
+		crowdsale = await Crowdsale.deploy(token.address, ether(1), tokens(1000000));
 
 		// Send tokens to crowdsale
 		let transaction = await token.connect(deployer).transfer(crowdsale.address, tokens(1000000));
@@ -45,6 +46,10 @@ describe('Crowdsale', () => {
 		it('returns token address', async () => {
 			expect(await crowdsale.token()).to.equal(token.address);
 		});
+
+		it('returns the max number of tokens', async () => {
+			expect(await crowdsale.maxTokens()).to.equal(tokens(1000000));
+		})
 
 	});
 
@@ -67,6 +72,10 @@ describe('Crowdsale', () => {
 				expect(await ethers.provider.getBalance(crowdsale.address)).to.equal(amount);	
 			})
 
+			it('updates tokensSold', async () => {
+				expect(await crowdsale.tokensSold()).to.equal(amount)
+			});
+
 			it('emits a buy event', async () => {
 				await expect(transaction).to.emit(crowdsale, 'Buy').withArgs(amount, user1.address);
 			});
@@ -75,6 +84,7 @@ describe('Crowdsale', () => {
 		it('returns token address', async () => {
 			expect(await crowdsale.token()).to.equal(token.address);
 		});
+
 
 		describe('Failure', () => {
 			it('rejects insufficient ETH', async () => {
