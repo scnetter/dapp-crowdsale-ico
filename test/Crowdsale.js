@@ -24,7 +24,6 @@ describe('Crowdsale', () => {
 		// Could this be used to interact with an existing token just using the
 		// a valid token address on the chain?
 		// Associate Deployed token with Crowdsale
-		// Why not tokens(100000) in demo was '1000000'
 		crowdsale = await Crowdsale.deploy(token.address, ether(1), tokens(1000000));
 
 		// Send tokens to crowdsale
@@ -92,8 +91,32 @@ describe('Crowdsale', () => {
 			});
 
 			// Write test to confirm failure on purchase of more tokens than are available.
-
+			// it('fails if purchase is for more tokens than available', async () => {
+			// 	await expect(crowdsale.connect(user1).buyTokens(tokens(10000000), { value: ether(10000000) * 1e18})).to.be.reverted;
+			// });
 		});
 	});
 
+	// Test for allowing user to send ETH directly to the smart contract (instead via the web UI)
+	describe('Sending ETH', () => {
+		let transaction, result;
+		let amount = tokens(10);
+
+		describe('Success', () => {
+
+			beforeEach(async () => {
+				transaction = await user1.sendTransaction({ to: crowdsale.address, value: amount });
+				result = await transaction.wait();
+			});
+
+			it('updates contract ether balance', async () => {
+				// QUESTION: Do we use amount in both places because it's 1:1 tokens:ether in this example?
+				expect(await ethers.provider.getBalance(crowdsale.address)).to.equal(amount);	
+			});
+
+			it('updates user token balance', async () => {
+				expect(await token.balanceOf(user1.address)).to.equal(amount);
+			});
+		});
+	})
 });

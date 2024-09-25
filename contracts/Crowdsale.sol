@@ -17,6 +17,11 @@ contract Crowdsale {
 		maxTokens = _maxTokens;
 	}
 
+	receive() external payable {
+		uint256 amount = msg.value / price;
+		buyTokens(amount * 1e18);
+	}
+
 	function buyTokens(uint256 _amount) public payable {
 		// msg.value 1 ether is 100000000000000000 Wei
 		require(msg.value == (_amount / 1e18) * price);
