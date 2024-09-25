@@ -2,6 +2,7 @@ const {expect} = require('chai');
 const {ethers} = require('hardhat');
 
 const tokens = (n) => ethers.utils.parseUnits(n.toString(), 'ether');
+const ether = tokens;
 
 describe('Crowdsale', () => {
 
@@ -23,7 +24,7 @@ describe('Crowdsale', () => {
 		// Could this be used to interact with an existing token just using the
 		// a valid token address on the chain?
 		// Associate Deployed token with Crowdsale
-		crowdsale = await Crowdsale.deploy(token.address);
+		crowdsale = await Crowdsale.deploy(token.address, ether(1));
 
 		// Send tokens to crowdsale
 		let transaction = await token.connect(deployer).transfer(crowdsale.address, tokens(1000000));
@@ -48,20 +49,35 @@ describe('Crowdsale', () => {
 	});
 
 	describe('Buying Tokens', () => {
+		let transaction, result;
 		let amount = tokens(10);
 
 		describe('Success', () => {
-			it('transfers tokens', async () => {
-				let transaction = await crowdsale.connect(user1).buyTokens(amount);
-				let result = await transaction.wait();
 
+			beforeEach(async () => {
+				transaction = await crowdsale.connect(user1).buyTokens(amount, { value:ether(10)});
+				result = await transaction.wait();
+			})
+			it('transfers tokens', async () => {
 				expect(await token.balanceOf(crowdsale.address)).to.equal(tokens(999990));
 				expect(await token.balanceOf(user1.address)).to.equal(amount);
 			});
+
+			it('updates contract ether balance', async () => {
+				expect(await ethers.provider.getBalance(crowdsale.address)).to.equal(amount);	
+			})
 		});
 
 		it('returns token address', async () => {
 			expect(await crowdsale.token()).to.equal(token.address);
 		});
+
+		describe('Failure', () => {
+			it('rejects insufficient ETH', async () => {
+				await expect(crowdsale.connect(user1).buyTokens(tokens(10),{ value: 0})).to.be.reverted;
+			});
+
+		});
 	});
+
 });
