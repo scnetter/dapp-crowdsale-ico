@@ -66,6 +66,10 @@ describe('Crowdsale', () => {
 			it('updates contract ether balance', async () => {
 				expect(await ethers.provider.getBalance(crowdsale.address)).to.equal(amount);	
 			})
+
+			it('emits a buy event', async () => {
+				await expect(transaction).to.emit(crowdsale, 'Buy').withArgs(amount, user1.address);
+			});
 		});
 
 		it('returns token address', async () => {
@@ -76,6 +80,8 @@ describe('Crowdsale', () => {
 			it('rejects insufficient ETH', async () => {
 				await expect(crowdsale.connect(user1).buyTokens(tokens(10),{ value: 0})).to.be.reverted;
 			});
+
+			// Write test to confirm failure on purchase of more tokens than are available.
 
 		});
 	});
