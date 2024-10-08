@@ -119,4 +119,62 @@ describe('Crowdsale', () => {
 			});
 		});
 	})
+
+	describe('Update Price', () => {
+		let transaction, price;
+		let newPrice = ether(2);
+
+		describe('Success', () => {
+			beforeEach(async () => {
+				transaction = await crowdsale.connect(deployer).setPrice(newPrice);
+				price = await crowdsale.price();
+			});
+
+			it('updates price', async () => {
+				expect(price).to.equal(newPrice);
+			});
+		});
+
+		describe('Failure', () => {
+			it('rejects if not owner', async () => {
+				await expect(crowdsale.connect(user1).setPrice(newPrice)).to.be.reverted;
+			});
+		});
+
+	});
+	describe('Finalizing Sale', () => {
+		let transaction, result;
+		let amount = tokens(10);
+		let value = ether(10);
+
+		describe('Success', ()=> {
+			beforeEach(async () => {
+				transaction = await crowdsale.connect(user1).buyTokens(amount, {value: value });
+				result = await transaction.wait();
+
+				transaction = await crowdsale.connect(deployer).finalize();
+				result = await transaction.wait();
+			});
+
+			it('transfers remianing tokens to deployer', async () => {
+				expect(await token.balanceOf(deployer.address)).to.equal(tokens(999990));
+				expect(await token.balanceOf(crowdsale.address)).to.equal(tokens(0));
+			});
+
+			it('transfers eth balance to owner', async () => {
+				expect(await ethers.provider.getBalance(crowdsale.address)).to.equal(0);
+			});
+
+			it('emits Finalize event', async () => {
+				await expect(transaction).to.emit(crowdsale, 'Finalize');
+			});
+
+		});
+
+		describe('Failure', () => {
+			it('rejects if not owner', async () => {
+				await expect(crowdsale.connect(user1).finalize()).to.be.reverted;
+			});
+		});
+	})
 });
