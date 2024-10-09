@@ -136,7 +136,7 @@ describe('Crowdsale', () => {
 		});
 
 		describe('Failure', () => {
-			it('rejects if not owner', async () => {
+			it('rejects update if not owner', async () => {
 				await expect(crowdsale.connect(user1).setPrice(newPrice)).to.be.reverted;
 			});
 		});
